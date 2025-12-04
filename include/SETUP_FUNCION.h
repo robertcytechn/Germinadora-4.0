@@ -46,6 +46,32 @@ void setupFunction(){
     pinMode(VENTILADOR_INTERNO_P, OUTPUT);              // Ventilador Interno (Mezcla) - PWM
     pinMode(BUZZER_P, OUTPUT);                          // Buzzer (Para alarmas sonoras) - PWM
 
+    // Iniciar ventiladores apagados
+    analogWrite(VENTILADOR_EXTERNO_P, VE_APAGADO);
+    analogWrite(VENTILADOR_INTERNO_P, VI_APAGADO);
+    POTENCIA_VENTILADOR_EXTERNO = VE_APAGADO;
+    POTENCIA_VENTILADOR_INTERNO = VI_APAGADO;
+    
+    // Configurar PID
+    ventiladorPID.SetMode(AUTOMATIC);          // Modo automático
+    ventiladorPID.SetOutputLimits(VE_MINIMO, VE_ALTO);  // Límites de salida del PID
+    ventiladorPID.SetSampleTime(5000);         // Actualizar cada 5 segundos
+    
+    // Inicializar marcas de tiempo
+    ULTIMO_INICIO_RENOVACION = millis();
+    ULTIMO_INICIO_MEZCLA = millis();
+    
+    Serial.println(F("✓ Sistema de ventilación inicializado"));
+    Serial.print(F("  - PID configurado: Kp="));
+    Serial.print(Kp);
+    Serial.print(F(", Ki="));
+    Serial.print(Ki);
+    Serial.print(F(", Kd="));
+    Serial.println(Kd);
+
+
+
+
     pinMode(CALEFACTORA_P, OUTPUT);                     // Resistencia Calefactora
     digitalWrite(CALEFACTORA_P, RELAY_APAGADO);                 // Apagar resistencia calefactora al inicio
     pinMode(HUMIDIFICADOR_P, OUTPUT);                   // Humidificador

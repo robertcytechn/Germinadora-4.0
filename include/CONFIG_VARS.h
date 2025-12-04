@@ -65,17 +65,72 @@ float HUMEDAD_OBJETIVO = 70.0;                              // Humedad objetivo 
 
 
 // configuracion de calefaccion
-bool CALENTADOR_ACTIVO = false;                         // Estado del calentador
-unsigned long TIEMPO_TRABAJO_CALENTADOR = 3 * 60000;    // Tiempo que puede estar encendida la resistencia calefactora (3 minutos)
-unsigned long TIEMPO_DESCANSO_CALENTADOR = 5 * 60000;   // Tiempo de descanso del calentador despues de su uso (5 minutos)
-unsigned long ULTIMO_CAMBIO_ESTADO_CALENTADOR = 0;      // Almacena el tiempo del ultimo cambio de estado del calentador
+bool CALENTADOR_ACTIVO = false;                             // Estado del calentador
+unsigned long TIEMPO_TRABAJO_CALENTADOR = 3 * 60000;        // Tiempo que puede estar encendida la resistencia calefactora (3 minutos)
+unsigned long TIEMPO_DESCANSO_CALENTADOR = 5 * 60000;       // Tiempo de descanso del calentador despues de su uso (5 minutos)
+unsigned long ULTIMO_CAMBIO_ESTADO_CALENTADOR = 0;          // Almacena el tiempo del ultimo cambio de estado del calentador
 
 // control humidificador
-bool HUMIDIFICADOR_ACTIVO = false;                        // Estado del humidificador
-unsigned long TIEMPO_TRABAJO_HUMIDIFICADOR = 2 * 60000;   // Tiempo que puede estar encendido el humidificador (2 minutos)
-unsigned long TIEMPO_DESCANSO_HUMIDIFICADOR = 10 * 60000; // Tiempo de descanso del humidificador despues de su uso (10 minutos)
-unsigned long ULTIMO_CAMBIO_ESTADO_HUMIDIFICADOR = 0;     // Almacena el tiempo del ultimo cambio de estado del humidificador
-int RELAY_ENCENDER_HUMIDIFICADOR = 250;                   // Duración del clic para encender el humidificador en ms (dedo fantasma)
-int RELAY_APAGAR_HUMIDIFICADOR = 500;                     // Duración del clic para apagar el humidificador en ms (dedo fantasma más largo para asegurar apagado)
+bool HUMIDIFICADOR_ACTIVO = false;                          // Estado del humidificador
+unsigned long TIEMPO_TRABAJO_HUMIDIFICADOR = 2 * 60000;     // Tiempo que puede estar encendido el humidificador (2 minutos)
+unsigned long TIEMPO_DESCANSO_HUMIDIFICADOR = 10 * 60000;   // Tiempo de descanso del humidificador despues de su uso (10 minutos)
+unsigned long ULTIMO_CAMBIO_ESTADO_HUMIDIFICADOR = 0;       // Almacena el tiempo del ultimo cambio de estado del humidificador
+int RELAY_ENCENDER_HUMIDIFICADOR = 250;                     // Duración del clic para encender el humidificador en ms (dedo fantasma)
+int RELAY_APAGAR_HUMIDIFICADOR = 500;                       // Duración del clic para apagar el humidificador en ms (dedo fantasma más largo para asegurar apagado)
+
+
+// control del ventilacion
+int POTENCIA_VENTILADOR_EXTERNO = 0;                        // Potencia del ventilador externo (0-255)
+int POTENCIA_VENTILADOR_INTERNO = 0;                        // Potencia del ventilador interno (0-255)
+
+// ==================== VENTILADOR EXTERNO ====================
+// Potencias definidas para diferentes modos de operación
+int VE_APAGADO = 0;                      // Ventilador completamente apagado
+int VE_MINIMO = 45;                      // Potencia mínima cuando humidificador activo (40-50 PWM)
+int VE_MEDIO = 128;                      // Potencia media para renovación de aire normal
+int VE_ALTO = 200;                       // Potencia alta para humedad elevada (80% = ~204 PWM)
+int VE_MAXIMO = 255;                     // Potencia máxima para emergencia de temperatura
+
+// Tiempos del ciclo de renovación normal de aire (en milisegundos)
+unsigned long TIEMPO_RENOVACION_AIRE = 10 * 60000;      // 10 minutos de ventilación
+unsigned long TIEMPO_DESCANSO_VENTILADOR = 50 * 60000;  // 50 minutos de descanso (completa 1 hora)
+
+// Variables de control de ciclo de renovación
+unsigned long ULTIMO_INICIO_RENOVACION = 0;    // Marca de tiempo del último inicio de renovación
+bool RENOVACION_ACTIVA = false;                // Flag para saber si estamos en ciclo de renovación
+
+// ==================== VENTILADOR INTERNO ====================
+// Potencias del ventilador interno (mezcla de aire)
+int VI_APAGADO = 0;                      // Ventilador interno apagado
+int VI_MAXIMO = 255;                     // Ventilador interno a máxima potencia
+
+// Tiempos del ciclo de mezcla de aire interno
+unsigned long TIEMPO_MEZCLA_AIRE = 3 * 60000;           // 3 minutos mezclando aire
+unsigned long TIEMPO_DESCANSO_MEZCLA = 7 * 60000;       // 7 minutos de descanso (completa 10 minutos)
+
+// Variables de control de ciclo de mezcla
+unsigned long ULTIMO_INICIO_MEZCLA = 0;        // Marca de tiempo del último inicio de mezcla
+bool MEZCLA_ACTIVA = false;                    // Flag para saber si estamos mezclando aire
+
+// ==================== CONTROL PID PARA VENTILADOR EXTERNO ====================
+// Variables para el PID (control basado en humedad)
+double PID_Input = 0.0;                        // Entrada del PID (humedad actual)
+double PID_Output = 0.0;                       // Salida del PID (potencia del ventilador)
+double PID_Setpoint = 70.0;                    // Punto de ajuste del PID (humedad objetivo)
+
+// Parámetros del PID - Ajustables según comportamiento del sistema
+// Kp: Ganancia proporcional - Respuesta inmediata al error
+// Ki: Ganancia integral - Corrige errores acumulados en el tiempo
+// Kd: Ganancia derivativa - Anticipa cambios futuros
+double Kp = 2.0;                               // Ganancia proporcional
+double Ki = 0.5;                               // Ganancia integral
+double Kd = 0.1;                               // Ganancia derivativa
+
+// Variables de estado del PID
+bool PID_ACTIVO = false; 
+
+// Crear objeto PID
+PID ventiladorPID(&PID_Input, &PID_Output, &PID_Setpoint, Kp, Ki, Kd, REVERSE);
+// REVERSE porque: Mayor humedad -> Mayor ventilación (inverso)
 
 #endif // CONFIG_VARS_H

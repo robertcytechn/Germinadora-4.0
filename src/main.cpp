@@ -15,6 +15,10 @@
 #include <LEER_SENSORES.h>
 #include <CONTROL_ILUMINACION.h>
 #include <CONTROL_HUMEDAD.h>
+#include <CONTROL_CALEFACCION.h>
+#include <CONTROL_VENTILACION.h>
+
+
 
 
 void setup() {
@@ -29,4 +33,9 @@ void loop() {
     // funciones de control
     controlIluminacion();
     controlarHumedad();
+    controlCalefaccion();
+    controlarVentilacion();
+
+
+    
 }
