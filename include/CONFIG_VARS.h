@@ -19,8 +19,6 @@ bool MODO_ANTI_HONGOS = false;              // Modo anti hongos desactivado por 
 
 // tiempos de reaccion y tiempo de espera entre loop y loop y reloj global de sistema
 DateTime RELOJ_GLOBAL;                                      // Variable para almacenar la hora actual del RTC
-const unsigned long TIEMPO_REACCION = 1 * 1000;             // Tiempo de reaccion del sistema en ms (1 segundo)
-unsigned long ULTIMO_PROCESO = 0;                           // Almacena el tiempo del ultimo proceso
 int minutosActuales = 0;                                    // Variable para almacenar los minutos actuales del dia
 bool esDia(){                                               // Funcion para determinar si es dia o noche segun el reloj global
     minutosActuales = RELOJ_GLOBAL.hour() * 60 + RELOJ_GLOBAL.minute();

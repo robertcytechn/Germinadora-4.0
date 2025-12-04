@@ -24,15 +24,7 @@ void loop() {
   // leer sensores cada 2 segundos  (Frecuencia declarada en LEER_SENSORES.h)
   // la funcion leerSensores() adquiere los datos de los DHT11 y actualiza el reloj RTC
   leerSensores();
-  // ejecutamos funcion de control de iluminacion cada segundo (frecuencia declarada en CONFIG_VARS.h)
-  if(millis() - ULTIMO_PROCESO >= TIEMPO_REACCION){
-    
+
     // funciones de control
     controlIluminacion();
-
-
-
-    
-    ULTIMO_PROCESO = millis();
-  }
 }
