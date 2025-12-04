@@ -1,18 +1,22 @@
 #include <Arduino.h>
+#include <DHT.h>
+#include <Adafruit_SSD1306.h>
+#include <Adafruit_GFX.h>
+#include <RTClib.h>
+#include <Wire.h>
+#include <SPI.h>
+#include <avr/wdt.h>
+#include <PID_v1.h>
 
-// put function declarations here:
-int myFunction(int, int);
+
+#include <CONFIG_PINS.h>
+#include <CONFIG_VARS.h>
+#include <SETUP_FUNCION.h>
 
 void setup() {
-  // put your setup code here, to run once:
-  int result = myFunction(2, 3);
+    setupFunction();
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-}
-
-// put function definitions here:
-int myFunction(int x, int y) {
-  return x + y;
 }
