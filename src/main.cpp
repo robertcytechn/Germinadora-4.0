@@ -12,11 +12,16 @@
 #include <CONFIG_PINS.h>
 #include <CONFIG_VARS.h>
 #include <SETUP_FUNCION.h>
+#include <CONTROL_ILUMINACION.h>
 
 void setup() {
     setupFunction();
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  // una vez por siclo pedimos la hora al reloj RTC
+  if (millis() - ULTIMO_PROCESO >= TIEMPO_REACCION) {
+      RELOJ_GLOBAL = reloj.now();
+      ULTIMO_PROCESO = millis();
+  }
 }

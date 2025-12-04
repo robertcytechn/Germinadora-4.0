@@ -47,8 +47,11 @@ void setupFunction(){
     pinMode(BUZZER_P, OUTPUT);                          // Buzzer (Para alarmas sonoras) - PWM
 
     pinMode(CALEFACTORA_P, OUTPUT);                     // Resistencia Calefactora
+    digitalWrite(CALEFACTORA_P, RELAY_APAGADO);                 // Apagar resistencia calefactora al inicio
     pinMode(HUMIDIFICADOR_P, OUTPUT);                   // Humidificador
+    digitalWrite(HUMIDIFICADOR_P, RELAY_APAGADO);               // Apagar humidificador al inicio
     pinMode(LEDS_ROJOS_P, OUTPUT);                      // Luces Rojas (Espectro Floración)
+    digitalWrite(LEDS_ROJOS_P, RELAY_APAGADO);                  // Apagar luces rojas al inicio
 
     pinMode(SD_CS_PIN, OUTPUT);                         // Chip Select para la SD
     pinMode(BTN_ENTER_P, INPUT_PULLUP);                 // Botón Enter
@@ -59,6 +62,11 @@ void setupFunction(){
 
 
     Serial.println("Setup completo.");
+
+    // Habilitar el watchdog timer con un tiempo de espera de 8 segundos
+    wdt_enable(WDTO_8S);
+
+
 }
 
 #endif // SETUP_FUNCION_H
