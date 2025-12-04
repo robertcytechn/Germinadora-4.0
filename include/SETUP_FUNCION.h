@@ -69,6 +69,7 @@ void setupFunction(){
     // Habilitar el watchdog timer con un tiempo de espera de 8 segundos
     wdt_enable(WDTO_8S);
 
+    // Ajustes para modo anti hongos si está activado cambiamos las variables de control de temperatura y humedad globales
     if(MODO_ANTI_HONGOS){
         TEMP_DIA = 30.0;                // Temperatura objetivo durante el dia en °C
         TEMP_NOCHE = 30.0;              // Temperatura objetivo durante la noche
