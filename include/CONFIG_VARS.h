@@ -16,6 +16,12 @@ DHT dhtPuerta(DHT_PUERTA_P, DHT11);                                         // O
 // ====================== MODO ANTI HONGOS ==========================
 bool MODO_ANTI_HONGOS = false;              // Modo anti hongos desactivado por defecto / solo activamos para desecar camara y esterilizar
 
+// Configuracion de iluminacion en minutos
+int INICIO_DIA = 7 * 60;                // Hora de inicio del dia (7 AM)
+int FIN_DIA = 21 * 60;                  // Hora de fin del dia (9 PM)
+int DURACION_FADE = 90;                 // Duracion del amanecer en minutos
+int POTENCIA_LUZ_BLANCA = 0;            // Potencia inicial de la luz blanca (0-255)
+bool LUZ_ROJA_ACTIVA = false;           // Estado inicial de la luz roja (apagada)
 
 // tiempos de reaccion y tiempo de espera entre loop y loop y reloj global de sistema
 DateTime RELOJ_GLOBAL;                                      // Variable para almacenar la hora actual del RTC
@@ -32,13 +38,6 @@ bool esDia(){                                               // Funcion para dete
 // relays con logica inversa
 const int RELAY_ENCENDIDO = LOW;
 const int RELAY_APAGADO = HIGH;
-
-// Configuracion de iluminacion en minutos
-int INICIO_DIA = 7 * 60;                // Hora de inicio del dia (7 AM)
-int FIN_DIA = 21 * 60;                  // Hora de fin del dia (9 PM)
-int DURACION_FADE = 90;                 // Duracion del amanecer en minutos
-int POTENCIA_LUZ_BLANCA = 0;            // Potencia inicial de la luz blanca (0-255)
-bool LUZ_ROJA_ACTIVA = false;           // Estado inicial de la luz roja (apagada)
 
 
 // configuracion de control y trabajo

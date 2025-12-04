@@ -17,6 +17,7 @@
 #include <CONTROL_HUMEDAD.h>
 #include <CONTROL_CALEFACCION.h>
 #include <CONTROL_VENTILACION.h>
+#include <MOSTRAR_PANTALLA.h>
 
 
 
@@ -36,6 +37,6 @@ void loop() {
     controlCalefaccion();
     controlarVentilacion();
 
-
-    
+  
+  mostrarPantalla();
 }
