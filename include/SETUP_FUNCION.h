@@ -69,6 +69,13 @@ void setupFunction(){
     // Habilitar el watchdog timer con un tiempo de espera de 8 segundos
     wdt_enable(WDTO_8S);
 
+    if(MODO_ANTI_HONGOS){
+        TEMP_DIA = 30.0;                // Temperatura objetivo durante el dia en °C
+        TEMP_NOCHE = 30.0;              // Temperatura objetivo durante la noche
+        TEMP_PELIGRO_MAXIMA = 40.0;     // Temperatura de peligro en °C
+        TEMP_PELIGRO_MINIMA = 20.0;     // Temperatura minima de peligro en °C
+        HUMEDAD_OBJETIVO = 40.0;        // Humedad objetivo en %
+    }
 
 }
 

@@ -43,5 +43,34 @@ int POTENCIA_LUZ_BLANCA = 0;            // Potencia inicial de la luz blanca (0-
 bool LUZ_ROJA_ACTIVA = false;           // Estado inicial de la luz roja (apagada)
 
 
+// configuracion de control y trabajo
+float TEMPERATURAS_SENSOR[3];                               // Array para almacenar las temperaturas de los 3 sensores
+float HUMEDADES_SENSOR[3];                                  // Array para almacenar las humedades de los 3 sensores
+float TEMP_MAXIMA = 0.0;                                    // Temperatura maxima registrada en °C
+float HUMEDAD_MAXIMA = 0.0;                                 // Humedad maxima registrada en %
+float TEMP_PROMEDIO = 0.0;                                  // Temperatura promedio de los sensores en °C
+float HUMEDAD_PROMEDIO = 0.0;                               // Humedad promedio de los sensores en %
+float HISTERESIS_TEMP = 2.0;                                // Histeresis para el control de temperatura en °C
+float HISTERESIS_HUMEDAD = 30.0;                             // Histeresis para el control de humedad en %
+
+float TEMP_PELIGRO_MAXIMA = 30.0;                           // Temperatura de peligro en °C
+float HUMEDAD_PELIGRO_MAXIMA = 90.0;                        // Humedad de peligro en %
+bool SISTEMA_PELIGRO_MAXIMO = false;                        // Estado de peligro por exceso de temperatura/humedad
+float TEMP_PELIGRO_MINIMA = 5.0;                            // Temperatura minima de peligro en °C
+float HUMEDAD_PELIGRO_MINIMA = 20.0;                        // Humedad minima de peligro en %
+bool SISTEMA_PELIGRO_MINIMO = false;                        // Estado de peligro por minima de temperatura/humedad
+
+float TEMP_DIA = 23.0;                                      // Temperatura objetivo durante el dia en °C
+float TEMP_NOCHE = 15.0;                                    // Temperatura objetivo durante la noche
+float HUMEDAD_OBJETIVO = 70.0;                              // Humedad objetivo en %
+
+
+// configuracion de calefaccion
+bool CALENTADOR_ACTIVO = false;                         // Estado del calentador
+unsigned long TIEMPO_TRABAJO_CALENTADOR = 3 * 60000;    // Tiempo que puede estar encendida la resistencia calefactora (3 minutos)
+unsigned long TIEMPO_DESCANSO_CALENTADOR = 5 * 60000;   // Tiempo de descanso del calentador despues de su uso (5 minutos)
+unsigned long ULTIMO_CAMBIO_ESTADO_CALENTADOR = 0;      // Almacena el tiempo del ultimo cambio de estado del calentador
+
+
 
 #endif // CONFIG_VARS_H
