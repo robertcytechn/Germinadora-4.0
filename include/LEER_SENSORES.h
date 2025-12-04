@@ -45,29 +45,13 @@ bool leerSensorDHT(DHT &sensor, uint8_t indice) {
  *  @brief Calcula valores máximos y promedios de temperatura y humedad
  */
 void calcularEstadisticas() {
-    float sumaTemp = 0.0;
-    float sumaHum = 0.0;
     
-    TEMP_MAXIMA = TEMPERATURAS_SENSOR[0];
-    HUMEDAD_MAXIMA = HUMEDADES_SENSOR[0];
-    
-    for (uint8_t i = 0; i < 3; i++) {
-        // Acumular para promedios
-        sumaTemp += TEMPERATURAS_SENSOR[i];
-        sumaHum += HUMEDADES_SENSOR[i];
-        
-        // Encontrar máximos
-        if (TEMPERATURAS_SENSOR[i] > TEMP_MAXIMA) {
-            TEMP_MAXIMA = TEMPERATURAS_SENSOR[i];
-        }
-        if (HUMEDADES_SENSOR[i] > HUMEDAD_MAXIMA) {
-            HUMEDAD_MAXIMA = HUMEDADES_SENSOR[i];
-        }
-    }
-    
+    // Calcular máximos
+    TEMP_MAXIMA = max(TEMPERATURAS_SENSOR[0], max(TEMPERATURAS_SENSOR[1], TEMPERATURAS_SENSOR[2]));
+    HUMEDAD_MAXIMA = max(HUMEDADES_SENSOR[0], max(HUMEDADES_SENSOR[1], HUMEDADES_SENSOR[2]));
     // Calcular promedios
-    TEMP_PROMEDIO = sumaTemp / 3.0;
-    HUMEDAD_PROMEDIO = sumaHum / 3.0;
+    TEMP_PROMEDIO = (TEMPERATURAS_SENSOR[0] + TEMPERATURAS_SENSOR[1] + TEMPERATURAS_SENSOR[2]) / 3.0;
+    HUMEDAD_PROMEDIO = (HUMEDADES_SENSOR[0] + HUMEDADES_SENSOR[1] + HUMEDADES_SENSOR[2]) / 3.0;
 }
 
 /**
