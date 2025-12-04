@@ -17,6 +17,7 @@
 #include <CONTROL_HUMEDAD.h>
 #include <CONTROL_CALEFACCION.h>
 #include <CONTROL_VENTILACION.h>
+#include <ACTUAR_HARDWARE.h>
 #include <MOSTRAR_PANTALLA.h>
 
 
@@ -27,16 +28,20 @@ void setup() {
 }
 
 void loop() {
+  //estoy vivo
+  wdt_reset();
   // leer sensores cada 2 segundos  (Frecuencia declarada en LEER_SENSORES.h)
   // la funcion leerSensores() adquiere los datos de los DHT11 y actualiza el reloj RTC
   leerSensores();
 
-    // funciones de control
+    // funciones de control (solo modifican variables de estado)
     controlIluminacion();
     controlarHumedad();
     controlCalefaccion();
     controlarVentilacion();
 
+    // aplicar los cambios al hardware (envía señales a los pines)
+    actuarHardware();
   
   mostrarPantalla();
 }

@@ -11,15 +11,9 @@
 // =================================================================
 
 // =================================================================
-//  APLICAR LA POTENCIA CALCULADA A LOS VENTILADORES
+//  NOTA: La aplicación de potencia a los ventiladores se realiza
+//  en la función actuarHardware() del archivo ACTUAR_HARDWARE.h
 // =================================================================
-void aplicarPotenciaVentiladores() {
-    // Aplicar potencia al ventilador externo
-    analogWrite(VENTILADOR_EXTERNO_P, POTENCIA_VENTILADOR_EXTERNO);
-    
-    // Aplicar potencia al ventilador interno
-    analogWrite(VENTILADOR_INTERNO_P, POTENCIA_VENTILADOR_INTERNO);
-}
 
 // =================================================================
 //  CONTROL DEL VENTILADOR INTERNO (Mezcla de aire)
@@ -32,7 +26,7 @@ void controlarVentiladorInterno() {
     if (CALENTADOR_ACTIVO) {
         if (POTENCIA_VENTILADOR_INTERNO != VI_MAXIMO) {
             POTENCIA_VENTILADOR_INTERNO = VI_MAXIMO;
-            Serial.println(F("🌀 Ventilador Interno: MÁXIMO (Calefacción activa)"));
+            Serial.println(F("[VENT INT] MAXIMO - Calefaccion activa"));
         }
         return;  // No continuar con el ciclo normal
     }
@@ -45,7 +39,7 @@ void controlarVentiladorInterno() {
             MEZCLA_ACTIVA = false;
             ULTIMO_INICIO_MEZCLA = tiempoActual;
             POTENCIA_VENTILADOR_INTERNO = VI_APAGADO;
-            Serial.println(F("🌀 Ventilador Interno: APAGADO (Iniciando descanso)"));
+            Serial.println(F("[VENT INT] APAGADO - Iniciando descanso"));
         }
     } else {
         // Estamos en fase de descanso
@@ -54,7 +48,7 @@ void controlarVentiladorInterno() {
             MEZCLA_ACTIVA = true;
             ULTIMO_INICIO_MEZCLA = tiempoActual;
             POTENCIA_VENTILADOR_INTERNO = VI_MAXIMO;
-            Serial.println(F("🌀 Ventilador Interno: MÁXIMO (Ciclo de mezcla)"));
+            Serial.println(F("[VENT INT] MAXIMO - Ciclo de mezcla"));
         }
     }
 }
@@ -75,10 +69,10 @@ void controlarVentiladorExterno() {
         PID_ACTIVO = false;  // Desactivar PID en emergencia
         
         if (POTENCIA_VENTILADOR_EXTERNO != VE_MAXIMO) {
-            Serial.println(F("🚨 EMERGENCIA: Temperatura alta detectada"));
-            Serial.print(F("💨 Ventilador Externo: MÁXIMO (255 PWM) - Temp: "));
+            Serial.println(F("[EMERGENCIA] Temperatura alta detectada"));
+            Serial.print(F("[VENT EXT] MAXIMO (255 PWM) - Temp: "));
             Serial.print(TEMP_PROMEDIO);
-            Serial.println(F("°C"));
+            Serial.println(F("C"));
         }
         POTENCIA_VENTILADOR_EXTERNO = nuevaPotencia;
         return;  // Salir inmediatamente, no procesar otras condiciones
@@ -92,8 +86,8 @@ void controlarVentiladorExterno() {
         PID_ACTIVO = false;  // Desactivar PID
         
         if (POTENCIA_VENTILADOR_EXTERNO != VE_ALTO) {
-            Serial.println(F("⚠️ ALERTA: Humedad crítica (≥95%)"));
-            Serial.print(F("💨 Ventilador Externo: ALTO ("));
+            Serial.println(F("[ALERTA] ALERTA: Humedad crítica (≥95%)"));
+            Serial.print(F("[VENT] Ventilador Externo: ALTO ("));
             Serial.print(VE_ALTO);
             Serial.print(F(" PWM) - Humedad: "));
             Serial.print(HUMEDAD_PROMEDIO);
@@ -111,8 +105,8 @@ void controlarVentiladorExterno() {
         PID_ACTIVO = false;  // Desactivar PID
         
         if (POTENCIA_VENTILADOR_EXTERNO != VE_APAGADO) {
-            Serial.println(F("🔥 Calefacción activa - Conservando calor"));
-            Serial.println(F("💨 Ventilador Externo: APAGADO"));
+            Serial.println(F("[CAL] Calefacción activa - Conservando calor"));
+            Serial.println(F("[VENT] Ventilador Externo: APAGADO"));
         }
         POTENCIA_VENTILADOR_EXTERNO = nuevaPotencia;
         return;  // No continuar con otras condiciones
@@ -126,8 +120,8 @@ void controlarVentiladorExterno() {
         PID_ACTIVO = false;  // Desactivar PID
         
         if (POTENCIA_VENTILADOR_EXTERNO != VE_MINIMO) {
-            Serial.println(F("💧 Humidificador activo - Conservando humedad"));
-            Serial.print(F("💨 Ventilador Externo: MÍNIMO ("));
+            Serial.println(F("[HUM] Humidificador activo - Conservando humedad"));
+            Serial.print(F("[VENT] Ventilador Externo: MÍNIMO ("));
             Serial.print(VE_MINIMO);
             Serial.println(F(" PWM)"));
         }
@@ -149,8 +143,8 @@ void controlarVentiladorExterno() {
             // Terminar renovación, iniciar descanso
             RENOVACION_ACTIVA = false;
             ULTIMO_INICIO_RENOVACION = tiempoActual;
-            Serial.println(F("💨 Ventilador Externo: Finalizando renovación de aire"));
-            Serial.println(F("⏸️  Iniciando periodo de descanso (50 min)"));
+            Serial.println(F("[VENT] Ventilador Externo: Finalizando renovación de aire"));
+            Serial.println(F("[PAUSA]  Iniciando periodo de descanso (50 min)"));
         }
         
         // Durante la renovación, usar control PID
@@ -169,7 +163,7 @@ void controlarVentiladorExterno() {
                 Serial.print(F("% | Objetivo: "));
                 Serial.print(HUMEDAD_OBJETIVO);
                 Serial.println(F("%"));
-                Serial.print(F("💨 Potencia calculada: "));
+                Serial.print(F("[VENT] Potencia calculada: "));
                 Serial.print(nuevaPotencia);
                 Serial.println(F(" PWM"));
                 ultimaPotenciaPID = nuevaPotencia;
@@ -182,8 +176,8 @@ void controlarVentiladorExterno() {
             // Iniciar nueva renovación
             RENOVACION_ACTIVA = true;
             ULTIMO_INICIO_RENOVACION = tiempoActual;
-            Serial.println(F("💨 Ventilador Externo: Iniciando renovación de aire"));
-            Serial.println(F("⏱️  Duración: 10 minutos con control PID"));
+            Serial.println(F("[VENT] Ventilador Externo: Iniciando renovación de aire"));
+            Serial.println(F("[TIEMPO]  Duración: 10 minutos con control PID"));
         }
         
         // Durante el descanso, ventilador apagado
@@ -191,7 +185,7 @@ void controlarVentiladorExterno() {
         PID_ACTIVO = false;
         
         if (POTENCIA_VENTILADOR_EXTERNO != VE_APAGADO) {
-            Serial.println(F("💨 Ventilador Externo: APAGADO (Periodo de descanso)"));
+            Serial.println(F("[VENT] Ventilador Externo: APAGADO (Periodo de descanso)"));
         }
     }
     
@@ -203,12 +197,11 @@ void controlarVentiladorExterno() {
 //  FUNCIÓN PRINCIPAL DE CONTROL DE VENTILACIÓN
 // =================================================================
 void controlarVentilacion() {
-    // Controlar ambos ventiladores
+    // Controlar ambos ventiladores (solo calculan y actualizan variables)
     controlarVentiladorExterno();
     controlarVentiladorInterno();
     
-    // Aplicar las potencias calculadas a los ventiladores
-    aplicarPotenciaVentiladores();
+    // NOTA: La aplicación de potencia a los pines se realiza en actuarHardware()
 }
 
 // =================================================================
@@ -227,17 +220,17 @@ void diagnosticoVentilacion() {
     
     Serial.print(F("Estado: "));
     if (TEMP_PROMEDIO >= TEMP_PELIGRO_MAXIMA) {
-        Serial.println(F("🚨 EMERGENCIA - Temperatura alta"));
+        Serial.println(F("[EMERG] EMERGENCIA - Temperatura alta"));
     } else if (HUMEDAD_PROMEDIO >= 95.0) {
-        Serial.println(F("⚠️ ALERTA - Humedad crítica"));
+        Serial.println(F("[ALERTA] ALERTA - Humedad crítica"));
     } else if (CALENTADOR_ACTIVO) {
-        Serial.println(F("🔥 APAGADO - Conservando calor"));
+        Serial.println(F("[CAL] APAGADO - Conservando calor"));
     } else if (HUMIDIFICADOR_ACTIVO) {
-        Serial.println(F("💧 MÍNIMO - Conservando humedad"));
+        Serial.println(F("[HUM] MÍNIMO - Conservando humedad"));
     } else if (RENOVACION_ACTIVA) {
-        Serial.println(F("🔄 RENOVACIÓN - Control PID activo"));
+        Serial.println(F("[CICLO] RENOVACIÓN - Control PID activo"));
     } else {
-        Serial.println(F("⏸️ DESCANSO"));
+        Serial.println(F("[PAUSA] DESCANSO"));
     }
     
     if (RENOVACION_ACTIVA) {
@@ -262,15 +255,15 @@ void diagnosticoVentilacion() {
     
     Serial.print(F("Estado: "));
     if (CALENTADOR_ACTIVO) {
-        Serial.println(F("🔥 MÁXIMO - Distribuyendo calor"));
+        Serial.println(F("[CAL] MÁXIMO - Distribuyendo calor"));
     } else if (MEZCLA_ACTIVA) {
-        Serial.println(F("🌀 MÁXIMO - Ciclo de mezcla"));
+        Serial.println(F("[MEZCLA] MÁXIMO - Ciclo de mezcla"));
         unsigned long tiempoRestante = TIEMPO_MEZCLA_AIRE - (millis() - ULTIMO_INICIO_MEZCLA);
         Serial.print(F("Tiempo restante: "));
         Serial.print(tiempoRestante / 60000);
         Serial.println(F(" min"));
     } else {
-        Serial.println(F("⏸️ DESCANSO"));
+        Serial.println(F("[PAUSA] DESCANSO"));
         unsigned long tiempoRestante = TIEMPO_DESCANSO_MEZCLA - (millis() - ULTIMO_INICIO_MEZCLA);
         Serial.print(F("Tiempo restante: "));
         Serial.print(tiempoRestante / 60000);
@@ -324,7 +317,7 @@ void ajustarPID(double nuevoKp, double nuevoKi, double nuevoKd) {
     Kd = nuevoKd;
     ventiladorPID.SetTunings(Kp, Ki, Kd);
     
-    Serial.println(F("✓ Parámetros PID actualizados"));
+    Serial.println(F("[OK] Parámetros PID actualizados"));
     Serial.print(F("  Kp="));
     Serial.print(Kp);
     Serial.print(F(", Ki="));
@@ -334,3 +327,4 @@ void ajustarPID(double nuevoKp, double nuevoKi, double nuevoKd) {
 }
 
 #endif // CONTROL_VENTILACION_H
+

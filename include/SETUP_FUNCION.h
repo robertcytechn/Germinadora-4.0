@@ -32,7 +32,7 @@ void setupFunction(){
         while (1);
     }
     // Ajustar la hora del reloj RTC al momento de la compilación - comentar después de la primera vez y volver a cargar el firmaware
-    // reloj.adjust(DateTime(F(__DATE__), F(__TIME__)));
+    reloj.adjust(DateTime(F(__DATE__), F(__TIME__)));
     
     // Inicializar pantalla OLED
     if(!display.begin(SSD1306_SWITCHCAPVCC, OLED_I2C)) { 
