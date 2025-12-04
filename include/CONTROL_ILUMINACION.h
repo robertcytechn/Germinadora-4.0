@@ -9,19 +9,25 @@
 const uint8_t POTENCIA_MAXIMA = 255;
 const uint8_t POTENCIA_MINIMA = 0;
 
+/**
+ *  @brief Apaga todas las luces del sistema
+ */
 inline void apagarLuces() {
     POTENCIA_LUZ_BLANCA = POTENCIA_MINIMA;
     LUZ_ROJA_ACTIVA = false;
 }
 
+/**
+ *  @brief Activa las luces a máxima potencia para el día
+ */
 inline void activarLucesDia() {
     POTENCIA_LUZ_BLANCA = POTENCIA_MAXIMA;
     LUZ_ROJA_ACTIVA = true;
 }
 
 /**
- * @brief Calcula la potencia de luz durante el fade de amanecer
- * @param minutosDesdeInicio Minutos transcurridos desde el inicio del día
+ *  @brief Calcula la potencia de luz durante el fade de amanecer
+ *  @param minutosDesdeInicio Minutos transcurridos desde el inicio del día
  */
 inline void procesarFadeAmanecer(int minutosDesdeInicio) {
     POTENCIA_LUZ_BLANCA = map(minutosDesdeInicio, 0, DURACION_FADE, POTENCIA_MINIMA, POTENCIA_MAXIMA);
@@ -29,8 +35,8 @@ inline void procesarFadeAmanecer(int minutosDesdeInicio) {
 }
 
 /**
- * @brief Calcula la potencia de luz durante el fade de atardecer
- * @param minutosHastaFin Minutos restantes hasta el fin del día
+ *  @brief Calcula la potencia de luz durante el fade de atardecer
+ *  @param minutosHastaFin Minutos restantes hasta el fin del día
  */
 inline void procesarFadeAtardecer(int minutosHastaFin) {
     POTENCIA_LUZ_BLANCA = map(minutosHastaFin, 0, DURACION_FADE, POTENCIA_MINIMA, POTENCIA_MAXIMA);
@@ -38,12 +44,12 @@ inline void procesarFadeAtardecer(int minutosHastaFin) {
 }
 
 /**
- * @brief Controla la iluminación según el modo y la hora del día
+ *  @brief Controla la iluminación según el modo y la hora del día
  * 
- * Gestiona tres estados principales:
- * - Modo anti-hongos: Mantiene luces al máximo siempre
- * - Período nocturno: Apaga todas las luces
- * - Período diurno: Controla fade de amanecer/atardecer y luz plena
+ *  Gestiona tres estados principales:
+ *  - Modo anti-hongos: Mantiene luces al máximo siempre
+ *  - Período nocturno: Apaga todas las luces
+ *  - Período diurno: Controla fade de amanecer/atardecer y luz plena
  */
 void controlIluminacion() {
     // Modo anti-hongos tiene prioridad sobre el control normal
