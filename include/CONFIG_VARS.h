@@ -49,10 +49,10 @@ float HUMEDAD_MAXIMA = 0.0;                                 // Humedad maxima re
 float TEMP_PROMEDIO = 0.0;                                  // Temperatura promedio de los sensores en °C
 float HUMEDAD_PROMEDIO = 0.0;                               // Humedad promedio de los sensores en %
 float HISTERESIS_TEMP = 2.0;                                // Histeresis para el control de temperatura en °C
-float HISTERESIS_HUMEDAD = 30.0;                             // Histeresis para el control de humedad en %
+float HISTERESIS_HUMEDAD = 5.0;                             // Histeresis para el control de humedad en %
 
 float TEMP_PELIGRO_MAXIMA = 30.0;                           // Temperatura de peligro en °C
-float HUMEDAD_PELIGRO_MAXIMA = 90.0;                        // Humedad de peligro en %
+float HUMEDAD_PELIGRO_MAXIMA = 90.0;                        // Humedad de peligro máxima en % (watchdog se activa aquí)
 bool SISTEMA_PELIGRO_MAXIMO = false;                        // Estado de peligro por exceso de temperatura/humedad
 float TEMP_PELIGRO_MINIMA = 5.0;                            // Temperatura minima de peligro en °C
 float HUMEDAD_PELIGRO_MINIMA = 20.0;                        // Humedad minima de peligro en %
@@ -60,7 +60,7 @@ bool SISTEMA_PELIGRO_MINIMO = false;                        // Estado de peligro
 
 float TEMP_DIA = 23.0;                                      // Temperatura objetivo durante el dia en °C
 float TEMP_NOCHE = 15.0;                                    // Temperatura objetivo durante la noche
-float HUMEDAD_OBJETIVO = 70.0;                              // Humedad objetivo en %
+float HUMEDAD_OBJETIVO = 70.0;                              // Humedad objetivo en % (rango de trabajo: 65-70% con histéresis de 5%)
 
 
 
@@ -70,6 +70,12 @@ unsigned long TIEMPO_TRABAJO_CALENTADOR = 3 * 60000;    // Tiempo que puede esta
 unsigned long TIEMPO_DESCANSO_CALENTADOR = 5 * 60000;   // Tiempo de descanso del calentador despues de su uso (5 minutos)
 unsigned long ULTIMO_CAMBIO_ESTADO_CALENTADOR = 0;      // Almacena el tiempo del ultimo cambio de estado del calentador
 
-
+// control humidificador
+bool HUMIDIFICADOR_ACTIVO = false;                        // Estado del humidificador
+unsigned long TIEMPO_TRABAJO_HUMIDIFICADOR = 2 * 60000;   // Tiempo que puede estar encendido el humidificador (2 minutos)
+unsigned long TIEMPO_DESCANSO_HUMIDIFICADOR = 10 * 60000; // Tiempo de descanso del humidificador despues de su uso (10 minutos)
+unsigned long ULTIMO_CAMBIO_ESTADO_HUMIDIFICADOR = 0;     // Almacena el tiempo del ultimo cambio de estado del humidificador
+int RELAY_ENCENDER_HUMIDIFICADOR = 250;                   // Duración del clic para encender el humidificador en ms (dedo fantasma)
+int RELAY_APAGAR_HUMIDIFICADOR = 500;                     // Duración del clic para apagar el humidificador en ms (dedo fantasma más largo para asegurar apagado)
 
 #endif // CONFIG_VARS_H
