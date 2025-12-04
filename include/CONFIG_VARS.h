@@ -65,6 +65,7 @@ float TEMP_NOCHE = 15.0;                                    // Temperatura objet
 float HUMEDAD_OBJETIVO = 70.0;                              // Humedad objetivo en %
 
 
+
 // configuracion de calefaccion
 bool CALENTADOR_ACTIVO = false;                         // Estado del calentador
 unsigned long TIEMPO_TRABAJO_CALENTADOR = 3 * 60000;    // Tiempo que puede estar encendida la resistencia calefactora (3 minutos)

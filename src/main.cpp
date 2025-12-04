@@ -12,17 +12,27 @@
 #include <CONFIG_PINS.h>
 #include <CONFIG_VARS.h>
 #include <SETUP_FUNCION.h>
+#include <LEER_SENSORES.h>
 #include <CONTROL_ILUMINACION.h>
+
 
 void setup() {
     setupFunction();
 }
 
 void loop() {
-  // una vez por siclo pedimos la hora al reloj RTC
-  if (millis() - ULTIMO_PROCESO >= TIEMPO_REACCION) {
-      RELOJ_GLOBAL = reloj.now();
-      ULTIMO_PROCESO = millis();
-      controlIluminacion();
+  // leer sensores cada 2 segundos  (Frecuencia declarada en LEER_SENSORES.h)
+  // la funcion leerSensores() adquiere los datos de los DHT11 y actualiza el reloj RTC
+  leerSensores();
+  // ejecutamos funcion de control de iluminacion cada segundo (frecuencia declarada en CONFIG_VARS.h)
+  if(millis() - ULTIMO_PROCESO >= TIEMPO_REACCION){
+    
+    // funciones de control
+    controlIluminacion();
+
+
+
+    
+    ULTIMO_PROCESO = millis();
   }
 }
