@@ -36,7 +36,7 @@ const int RELAY_ENCENDIDO = LOW;
 const int RELAY_APAGADO = HIGH;
 
 // Configuracion de iluminacion en minutos
-int INICIO_DIA = 8 * 60;                // Hora de inicio del dia (8 AM)
+int INICIO_DIA = 7 * 60;                // Hora de inicio del dia (7 AM)
 int FIN_DIA = 21 * 60;                  // Hora de fin del dia (9 PM)
 int DURACION_FADE = 90;                 // Duracion del amanecer en minutos
 int POTENCIA_LUZ_BLANCA = 0;            // Potencia inicial de la luz blanca (0-255)

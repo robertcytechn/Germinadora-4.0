@@ -23,5 +23,6 @@ void loop() {
   if (millis() - ULTIMO_PROCESO >= TIEMPO_REACCION) {
       RELOJ_GLOBAL = reloj.now();
       ULTIMO_PROCESO = millis();
+      controlIluminacion();
   }
 }

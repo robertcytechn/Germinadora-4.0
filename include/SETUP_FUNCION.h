@@ -60,6 +60,9 @@ void setupFunction(){
     pinMode(BTN_DOWN_P, INPUT_PULLUP);                  // Botón Down
     pinMode(BTNTEST_PERIFERICOS_P, INPUT_PULLUP);       // Botón de prueba de periféricos (Opcional)
 
+    // cambiamos la potencia del pwm para que los ventiladores no hagan ruido al minimo
+    TCCR3B &= ~0x07; // Clear prescaler bits
+    TCCR3B |= 0x01;  // Set prescaler to 1 (no prescaling) o maxima frecuencia PWM
 
     Serial.println("Setup completo.");
 
