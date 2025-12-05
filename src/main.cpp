@@ -18,6 +18,7 @@
 #include <CONTROL_CALEFACCION.h>
 #include <CONTROL_VENTILACION.h>
 #include <ACTUAR_HARDWARE.h>
+#include <TEST_PERIFERICOS.h>
 #include <MOSTRAR_PANTALLA.h>
 
 
@@ -29,7 +30,15 @@ void setup() {
 
 void loop() {
   //estoy vivo
-  wdt_reset();
+  // wdt_reset();
+  
+  // VERIFICAR BOTÓN DE TEST DE PERIFÉRICOS (tiene máxima prioridad)
+  if (verificarBotonTest()) {
+    // Si se ejecutó el test, reiniciar watchdog y continuar
+    // wdt_reset();
+    return;  // Saltar el resto del loop y comenzar uno nuevo
+  }
+  
   // leer sensores cada 2 segundos  (Frecuencia declarada en LEER_SENSORES.h)
   // la funcion leerSensores() adquiere los datos de los DHT11 y actualiza el reloj RTC
   leerSensores();

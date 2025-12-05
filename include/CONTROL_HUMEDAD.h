@@ -19,6 +19,12 @@ bool RELAY_CLIC_ACTIVO = false;                        // Flag para saber si hay
 unsigned long TIEMPO_INICIO_CLIC = 0;                  // Momento en que se inició el clic
 unsigned long DURACION_CLIC_ACTUAL = 0;                // Duración del clic actual
 
+// Variables para el control de doble pulso (apagado)
+bool DOBLE_PULSO_ACTIVO = false;                       // Flag para saber si estamos en proceso de doble pulso
+int PULSO_ACTUAL = 0;                                  // Contador de pulsos (0 = ninguno, 1 = primer pulso, 2 = segundo pulso)
+unsigned long TIEMPO_ESPERA_ENTRE_PULSOS = 0;          // Momento en que terminó el primer pulso
+const unsigned long PAUSA_ENTRE_PULSOS = 200;          // Pausa de 200ms entre pulsos
+
 // Tiempos de verificación
 const unsigned long TIEMPO_VERIFICACION_ENCENDIDO = 3 * 60000;  // 3 minutos para verificar si encendió
 const float INCREMENTO_MINIMO_HUMEDAD = 5.0;                    // 5% de incremento mínimo esperado
@@ -47,7 +53,34 @@ void actualizarClicHumidificador() {
             // Apagar el relay después del tiempo especificado
             digitalWrite(HUMIDIFICADOR_P, RELAY_APAGADO);
             RELAY_CLIC_ACTIVO = false;
+            
+            // Si estamos en modo doble pulso y acabamos de terminar el primer pulso
+            if (DOBLE_PULSO_ACTIVO && PULSO_ACTUAL == 1) {
+                TIEMPO_ESPERA_ENTRE_PULSOS = millis();
+            }
         }
+    }
+    
+    // Manejar el segundo pulso del doble pulso
+    if (DOBLE_PULSO_ACTIVO && !RELAY_CLIC_ACTIVO && PULSO_ACTUAL == 1) {
+        unsigned long tiempoEspera = millis() - TIEMPO_ESPERA_ENTRE_PULSOS;
+        
+        if (tiempoEspera >= PAUSA_ENTRE_PULSOS) {
+            // Iniciar el segundo pulso
+            digitalWrite(HUMIDIFICADOR_P, RELAY_ENCENDIDO);
+            RELAY_CLIC_ACTIVO = true;
+            TIEMPO_INICIO_CLIC = millis();
+            DURACION_CLIC_ACTUAL = RELAY_APAGAR_HUMIDIFICADOR;
+            PULSO_ACTUAL = 2;
+            Serial.println(F("Enviando segundo pulso de apagado..."));
+        }
+    }
+    
+    // Finalizar el doble pulso después del segundo pulso
+    if (DOBLE_PULSO_ACTIVO && !RELAY_CLIC_ACTIVO && PULSO_ACTUAL == 2) {
+        DOBLE_PULSO_ACTIVO = false;
+        PULSO_ACTUAL = 0;
+        Serial.println(F("Doble pulso completado"));
     }
 }
 
@@ -81,11 +114,18 @@ void encenderHumidificador() {
 //  FUNCIÓN PARA APAGAR EL HUMIDIFICADOR
 // =================================================================
 void apagarHumidificador() {
-    if (HUMIDIFICADOR_ACTIVO && !RELAY_CLIC_ACTIVO) {
-        Serial.println(F("Apagando humidificador..."));
+    if (HUMIDIFICADOR_ACTIVO && !RELAY_CLIC_ACTIVO && !DOBLE_PULSO_ACTIVO) {
+        Serial.println(F("Apagando humidificador con doble pulso..."));
         
-        // Simular clic para apagar (no bloqueante)
-        iniciarClicHumidificador(RELAY_APAGAR_HUMIDIFICADOR);
+        // Activar modo doble pulso
+        DOBLE_PULSO_ACTIVO = true;
+        PULSO_ACTUAL = 1;
+        
+        // Iniciar el primer pulso
+        digitalWrite(HUMIDIFICADOR_P, RELAY_ENCENDIDO);
+        RELAY_CLIC_ACTIVO = true;
+        TIEMPO_INICIO_CLIC = millis();
+        DURACION_CLIC_ACTUAL = RELAY_APAGAR_HUMIDIFICADOR;
         
         // Actualizar estados
         HUMIDIFICADOR_ACTIVO = false;
@@ -93,7 +133,7 @@ void apagarHumidificador() {
         VERIFICANDO_ENCENDIDO = false;
         INTENTOS_REENCENDIDO = 0;
         
-        Serial.println(F("Humidificador apagado correctamente"));
+        Serial.println(F("Primer pulso de apagado enviado..."));
     }
 }
 

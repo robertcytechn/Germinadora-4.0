@@ -75,7 +75,7 @@ unsigned long TIEMPO_TRABAJO_HUMIDIFICADOR = 2 * 60000;     // Tiempo que puede 
 unsigned long TIEMPO_DESCANSO_HUMIDIFICADOR = 10 * 60000;   // Tiempo de descanso del humidificador despues de su uso (10 minutos)
 unsigned long ULTIMO_CAMBIO_ESTADO_HUMIDIFICADOR = 0;       // Almacena el tiempo del ultimo cambio de estado del humidificador
 int RELAY_ENCENDER_HUMIDIFICADOR = 250;                     // Duración del clic para encender el humidificador en ms (dedo fantasma)
-int RELAY_APAGAR_HUMIDIFICADOR = 500;                       // Duración del clic para apagar el humidificador en ms (dedo fantasma más largo para asegurar apagado)
+int RELAY_APAGAR_HUMIDIFICADOR = 150;                       // Duración del clic para apagar el humidificador en ms (dedo fantasma más largo para asegurar apagado)
 
 
 // control del ventilacion
@@ -92,7 +92,7 @@ int VE_MAXIMO = 255;                     // Potencia máxima para emergencia de 
 
 // Tiempos del ciclo de renovación normal de aire (en milisegundos)
 unsigned long TIEMPO_RENOVACION_AIRE = 10 * 60000;      // 10 minutos de ventilación
-unsigned long TIEMPO_DESCANSO_VENTILADOR = 50 * 60000;  // 50 minutos de descanso (completa 1 hora)
+unsigned long TIEMPO_DESCANSO_VENTILADOR = 10 * 60000;  // 10 minutos de descanso (completa 20 min total)
 
 // Variables de control de ciclo de renovación
 unsigned long ULTIMO_INICIO_RENOVACION = 0;    // Marca de tiempo del último inicio de renovación
@@ -105,7 +105,7 @@ int VI_MAXIMO = 255;                     // Ventilador interno a máxima potenci
 
 // Tiempos del ciclo de mezcla de aire interno
 unsigned long TIEMPO_MEZCLA_AIRE = 3 * 60000;           // 3 minutos mezclando aire
-unsigned long TIEMPO_DESCANSO_MEZCLA = 7 * 60000;       // 7 minutos de descanso (completa 10 minutos)
+unsigned long TIEMPO_DESCANSO_MEZCLA = 2 * 60000;       // 2 minutos de descanso (completa 5 minutos total)
 
 // Variables de control de ciclo de mezcla
 unsigned long ULTIMO_INICIO_MEZCLA = 0;        // Marca de tiempo del último inicio de mezcla

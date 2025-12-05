@@ -93,7 +93,7 @@ void setupFunction(){
     Serial.println("Setup completo.");
 
     // Habilitar el watchdog timer con un tiempo de espera de 8 segundos
-    wdt_enable(WDTO_8S);
+    // wdt_enable(WDTO_8S);
 
     // Ajustes para modo anti hongos si está activado cambiamos las variables de control de temperatura y humedad globales
     if(MODO_ANTI_HONGOS){
