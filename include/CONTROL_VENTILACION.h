@@ -23,15 +23,26 @@ void controlarVentiladorInterno() {
     unsigned long tiempoTranscurrido = tiempoActual - ULTIMO_INICIO_MEZCLA;
     
     // PRIORIDAD 1: Si la calefacción está encendida, mezclar aire a máxima potencia
+    // Esto distribuye el calor uniformemente y evita puntos calientes
     if (CALENTADOR_ACTIVO) {
         if (POTENCIA_VENTILADOR_INTERNO != VI_MAXIMO) {
             POTENCIA_VENTILADOR_INTERNO = VI_MAXIMO;
-            Serial.println(F("[VENT INT] MAXIMO - Calefaccion activa"));
+            Serial.println(F("[VENT INT] MAXIMO - Distribuyendo calor"));
         }
-        return;  // No continuar con el ciclo normal
+        return;
     }
     
-    // CICLO NORMAL: 3 minutos encendido, 7 minutos apagado (completa 10 minutos)
+    // PRIORIDAD 2: Si estamos en período de desecación, mezclar aire
+    if (esPeriodoDesecacion()) {
+        if (POTENCIA_VENTILADOR_INTERNO != VI_MAXIMO) {
+            POTENCIA_VENTILADOR_INTERNO = VI_MAXIMO;
+            Serial.println(F("[VENT INT] MAXIMO - Periodo de desecación"));
+        }
+        return;
+    }
+    
+    // CICLO NORMAL: 3 minutos encendido, 2 minutos apagado
+    // Esto homogeniza temperatura y humedad sin crear corrientes excesivas
     if (MEZCLA_ACTIVA) {
         // Estamos en fase de mezcla
         if (tiempoTranscurrido >= TIEMPO_MEZCLA_AIRE) {
@@ -39,7 +50,7 @@ void controlarVentiladorInterno() {
             MEZCLA_ACTIVA = false;
             ULTIMO_INICIO_MEZCLA = tiempoActual;
             POTENCIA_VENTILADOR_INTERNO = VI_APAGADO;
-            Serial.println(F("[VENT INT] APAGADO - Iniciando descanso"));
+            Serial.println(F("[VENT INT] APAGADO - Descanso (2 min)"));
         }
     } else {
         // Estamos en fase de descanso
@@ -48,7 +59,7 @@ void controlarVentiladorInterno() {
             MEZCLA_ACTIVA = true;
             ULTIMO_INICIO_MEZCLA = tiempoActual;
             POTENCIA_VENTILADOR_INTERNO = VI_MAXIMO;
-            Serial.println(F("[VENT INT] MAXIMO - Ciclo de mezcla"));
+            Serial.println(F("[VENT INT] MAXIMO - Mezclando aire (3 min)"));
         }
     }
 }
@@ -57,16 +68,23 @@ void controlarVentiladorInterno() {
 //  CONTROL DEL VENTILADOR EXTERNO (Extracción/Inyección de aire)
 // =================================================================
 void controlarVentiladorExterno() {
-    unsigned long tiempoActual = millis();
-    unsigned long tiempoTranscurrido = tiempoActual - ULTIMO_INICIO_RENOVACION;
-    int nuevaPotencia = POTENCIA_VENTILADOR_EXTERNO;  // Mantener potencia actual por defecto
+    int nuevaPotencia = VE_APAGADO;  // Por defecto apagado
+    
+    // Calcular temperatura objetivo según la hora del día
+    float tempObjetivo = esDia() ? TEMP_DIA : TEMP_NOCHE;
+    
+    // Calcular bandas de trabajo con histéresis
+    float tempLimiteInferior = tempObjetivo - HISTERESIS_TEMP;
+    float tempLimiteSuperior = tempObjetivo + HISTERESIS_TEMP;
+    float humedadLimiteInferior = HUMEDAD_OBJETIVO - HISTERESIS_HUMEDAD;
+    float humedadLimiteSuperior = HUMEDAD_OBJETIVO + HISTERESIS_HUMEDAD;
     
     // ===============================================================
     // PRIORIDAD MÁXIMA: PERIODO DE DESECACIÓN ANTI-HONGOS
     // ===============================================================
     if (esPeriodoDesecacion()) {
         nuevaPotencia = VE_ALTO;  // Ventilación alta durante desecación
-        PID_ACTIVO = false;  // Desactivar PID
+        PID_ACTIVO = false;
         
         if (POTENCIA_VENTILADOR_EXTERNO != VE_ALTO || !PERIODO_DESECACION_ACTIVO) {
             Serial.println(F("[DESECACIÓN] Ventilador Externo: ALTO"));
@@ -75,15 +93,15 @@ void controlarVentiladorExterno() {
             Serial.println(F(" PWM - Reduciendo humedad"));
         }
         POTENCIA_VENTILADOR_EXTERNO = nuevaPotencia;
-        return;  // Salir, prioridad máxima
+        return;
     }
     
     // ===============================================================
-    // PRIORIDAD 1: EMERGENCIA - TEMPERATURA ALTA (Máxima prioridad)
+    // PRIORIDAD 1: EMERGENCIA - TEMPERATURA ALTA
     // ===============================================================
     if (TEMP_PROMEDIO >= TEMP_PELIGRO_MAXIMA) {
         nuevaPotencia = VE_MAXIMO;
-        PID_ACTIVO = false;  // Desactivar PID en emergencia
+        PID_ACTIVO = false;
         
         if (POTENCIA_VENTILADOR_EXTERNO != VE_MAXIMO) {
             Serial.println(F("[EMERGENCIA] Temperatura alta detectada"));
@@ -92,139 +110,153 @@ void controlarVentiladorExterno() {
             Serial.println(F("C"));
         }
         POTENCIA_VENTILADOR_EXTERNO = nuevaPotencia;
-        return;  // Salir inmediatamente, no procesar otras condiciones
+        return;
     }
     
     // ===============================================================
-    // PRIORIDAD 2: HUMEDAD CRÍTICA ALTA (95% o más)
+    // PRIORIDAD 2: HUMEDAD CRÍTICA ALTA (≥95%)
     // ===============================================================
     if (HUMEDAD_PROMEDIO >= 95.0) {
-        nuevaPotencia = VE_ALTO;  // 80% de potencia (~204 PWM)
-        PID_ACTIVO = false;  // Desactivar PID
+        nuevaPotencia = VE_ALTO;
+        PID_ACTIVO = false;
         
         if (POTENCIA_VENTILADOR_EXTERNO != VE_ALTO) {
-            Serial.println(F("[ALERTA] ALERTA: Humedad crítica (≥95%)"));
-            Serial.print(F("[VENT] Ventilador Externo: ALTO ("));
+            Serial.println(F("[ALERTA] Humedad crítica (≥95%)"));
+            Serial.print(F("[VENT EXT] ALTO ("));
             Serial.print(VE_ALTO);
             Serial.print(F(" PWM) - Humedad: "));
             Serial.print(HUMEDAD_PROMEDIO);
             Serial.println(F("%"));
         }
         POTENCIA_VENTILADOR_EXTERNO = nuevaPotencia;
-        return;  // Salir, no procesar condiciones de menor prioridad
+        return;
     }
     
     // ===============================================================
-    // PRIORIDAD 3: CALEFACCIÓN ACTIVA - Apagar ventilador externo
+    // PRIORIDAD 3: CONSERVACIÓN - No ventilar si hay calefacción/humidificación activa
     // ===============================================================
     if (CALENTADOR_ACTIVO) {
-        nuevaPotencia = VE_APAGADO;
-        PID_ACTIVO = false;  // Desactivar PID
-        
-        if (POTENCIA_VENTILADOR_EXTERNO != VE_APAGADO) {
-            Serial.println(F("[CAL] Calefacción activa - Conservando calor"));
-            Serial.println(F("[VENT] Ventilador Externo: APAGADO"));
-        }
-        POTENCIA_VENTILADOR_EXTERNO = nuevaPotencia;
-        return;  // No continuar con otras condiciones
-    }
-    
-    // ===============================================================
-    // PRIORIDAD 4: HUMIDIFICADOR ACTIVO - Ventilador mínimo
-    // ===============================================================
-    if (HUMIDIFICADOR_ACTIVO) {
-        nuevaPotencia = VE_MINIMO;  // 40-50 PWM
-        PID_ACTIVO = false;  // Desactivar PID
-        
-        if (POTENCIA_VENTILADOR_EXTERNO != VE_MINIMO) {
-            Serial.println(F("[HUM] Humidificador activo - Conservando humedad"));
-            Serial.print(F("[VENT] Ventilador Externo: MÍNIMO ("));
-            Serial.print(VE_MINIMO);
-            Serial.println(F(" PWM)"));
-        }
-        POTENCIA_VENTILADOR_EXTERNO = nuevaPotencia;
-        return;  // No continuar con control normal
-    }
-    
-    // ===============================================================
-    // PRIORIDAD BAJA: MODO NOCTURNO - Ventilador apagado de noche
-    // ===============================================================
-    if (!esDia()) {
         nuevaPotencia = VE_APAGADO;
         PID_ACTIVO = false;
         
         if (POTENCIA_VENTILADOR_EXTERNO != VE_APAGADO) {
-            Serial.println(F("[NOCHE] Ventilador Externo: APAGADO"));
-            Serial.println(F("Modo nocturno - Conservando condiciones"));
+            Serial.println(F("[CAL] Calefacción activa - Conservando calor"));
+            Serial.println(F("[VENT EXT] APAGADO"));
         }
         POTENCIA_VENTILADOR_EXTERNO = nuevaPotencia;
-        return;  // No continuar con el control normal
+        return;
+    }
+    
+    if (HUMIDIFICADOR_ACTIVO) {
+        nuevaPotencia = VE_APAGADO;
+        PID_ACTIVO = false;
+        
+        if (POTENCIA_VENTILADOR_EXTERNO != VE_APAGADO) {
+            Serial.println(F("[HUM] Humidificador activo - Conservando humedad"));
+            Serial.println(F("[VENT EXT] APAGADO"));
+        }
+        POTENCIA_VENTILADOR_EXTERNO = nuevaPotencia;
+        return;
     }
     
     // ===============================================================
-    // MODO NORMAL: CONTROL PID + CICLO DE RENOVACIÓN (SOLO DE DÍA)
+    // PRIORIDAD 4: CONTROL INTELIGENTE BASADO EN BANDAS DE TRABAJO
     // ===============================================================
+    // Solo ventilar si EXCEDEMOS los límites superiores
+    // Apagar si estamos DEBAJO de los límites inferiores
     
-    // Actualizar setpoint del PID con la humedad objetivo actual
-    PID_Setpoint = HUMEDAD_OBJETIVO;
+    bool temperaturaAlta = (TEMP_PROMEDIO > tempLimiteSuperior);
+    bool humedadAlta = (HUMEDAD_PROMEDIO > humedadLimiteSuperior);
+    bool temperaturaBaja = (TEMP_PROMEDIO < tempLimiteInferior);
+    bool humedadBaja = (HUMEDAD_PROMEDIO < humedadLimiteInferior);
     
-    // Determinar si estamos en ciclo de renovación
-    if (RENOVACION_ACTIVA) {
-        // Estamos en fase de renovación (10 minutos)
-        if (tiempoTranscurrido >= TIEMPO_RENOVACION_AIRE) {
-            // Terminar renovación, iniciar descanso
-            RENOVACION_ACTIVA = false;
-            ULTIMO_INICIO_RENOVACION = tiempoActual;
-            Serial.println(F("[VENT] Ventilador Externo: Finalizando renovación de aire"));
-            Serial.println(F("[PAUSA]  Iniciando periodo de descanso (50 min) con ventilación mínima"));
-        }
+    // SI temperatura o humedad están BAJAS, NO ventilar (conservar)
+    if (temperaturaBaja || humedadBaja) {
+        nuevaPotencia = VE_APAGADO;
+        PID_ACTIVO = false;
         
-        // Durante la renovación, usar control PID
+        if (POTENCIA_VENTILADOR_EXTERNO != VE_APAGADO) {
+            Serial.println(F("[CONSERVACIÓN] Condiciones dentro o bajo límites"));
+            if (temperaturaBaja) {
+                Serial.print(F("[TEMP BAJA] "));
+                Serial.print(TEMP_PROMEDIO);
+                Serial.print(F("°C < "));
+                Serial.print(tempLimiteInferior);
+                Serial.println(F("°C"));
+            }
+            if (humedadBaja) {
+                Serial.print(F("[HUM BAJA] "));
+                Serial.print(HUMEDAD_PROMEDIO);
+                Serial.print(F("% < "));
+                Serial.print(humedadLimiteInferior);
+                Serial.println(F("%"));
+            }
+            Serial.println(F("[VENT EXT] APAGADO - Conservando ambiente"));
+        }
+        POTENCIA_VENTILADOR_EXTERNO = nuevaPotencia;
+        return;
+    }
+    
+    // SI temperatura o humedad están ALTAS, ventilar con PID
+    if (temperaturaAlta || humedadAlta) {
         PID_ACTIVO = true;
         PID_Input = HUMEDAD_PROMEDIO;
+        PID_Setpoint = HUMEDAD_OBJETIVO;
         
         if (ventiladorPID.Compute()) {
             nuevaPotencia = (int)PID_Output;
             
-            // Logging detallado del PID (solo cuando cambia significativamente)
+            // Asegurar rango válido
+            nuevaPotencia = constrain(nuevaPotencia, VE_MINIMO, VE_ALTO);
+            
             static int ultimaPotenciaPID = 0;
-            if (abs(nuevaPotencia - ultimaPotenciaPID) > 10) {  // Cambio mayor a 10 PWM
-                Serial.println(F("--- Control PID Activo ---"));
-                Serial.print(F("Humedad: "));
-                Serial.print(HUMEDAD_PROMEDIO);
-                Serial.print(F("% | Objetivo: "));
-                Serial.print(HUMEDAD_OBJETIVO);
-                Serial.println(F("%"));
-                Serial.print(F("[VENT] Potencia calculada: "));
+            if (abs(nuevaPotencia - ultimaPotenciaPID) > 10) {
+                Serial.println(F("[CONTROL PID] Ajustando ventilación"));
+                if (temperaturaAlta) {
+                    Serial.print(F("[TEMP ALTA] "));
+                    Serial.print(TEMP_PROMEDIO);
+                    Serial.print(F("°C > "));
+                    Serial.print(tempLimiteSuperior);
+                    Serial.println(F("°C"));
+                }
+                if (humedadAlta) {
+                    Serial.print(F("[HUM ALTA] "));
+                    Serial.print(HUMEDAD_PROMEDIO);
+                    Serial.print(F("% > "));
+                    Serial.print(humedadLimiteSuperior);
+                    Serial.println(F("%"));
+                }
+                Serial.print(F("[VENT EXT] Potencia: "));
                 Serial.print(nuevaPotencia);
                 Serial.println(F(" PWM"));
                 ultimaPotenciaPID = nuevaPotencia;
             }
         }
-        
     } else {
-        // Estamos en fase de descanso (50 minutos)
-        if (tiempoTranscurrido >= TIEMPO_DESCANSO_VENTILADOR) {
-            // Iniciar nueva renovación
-            RENOVACION_ACTIVA = true;
-            ULTIMO_INICIO_RENOVACION = tiempoActual;
-            Serial.println(F("[VENT] Ventilador Externo: Iniciando renovación de aire"));
-            Serial.println(F("[TIEMPO]  Duración: 10 minutos con control PID"));
-        }
-        
-        // Durante el descanso, ventilación MÍNIMA (cambiado de APAGADO a MÍNIMO)
-        nuevaPotencia = VE_MINIMO;
+        // Dentro de los límites normales, apagado
+        nuevaPotencia = VE_APAGADO;
         PID_ACTIVO = false;
         
-        if (POTENCIA_VENTILADOR_EXTERNO != VE_MINIMO) {
-            Serial.println(F("[VENT] Ventilador Externo: MÍNIMO (Periodo de descanso)"));
-            Serial.print(F("Potencia: "));
-            Serial.print(VE_MINIMO);
-            Serial.println(F(" PWM - Circulación constante"));
+        if (POTENCIA_VENTILADOR_EXTERNO != VE_APAGADO) {
+            Serial.println(F("[ESTABLE] Condiciones dentro de rango óptimo"));
+            Serial.print(F("Temp: "));
+            Serial.print(TEMP_PROMEDIO);
+            Serial.print(F("°C ("));
+            Serial.print(tempLimiteInferior);
+            Serial.print(F("-"));
+            Serial.print(tempLimiteSuperior);
+            Serial.println(F("°C)"));
+            Serial.print(F("Hum: "));
+            Serial.print(HUMEDAD_PROMEDIO);
+            Serial.print(F("% ("));
+            Serial.print(humedadLimiteInferior);
+            Serial.print(F("-"));
+            Serial.print(humedadLimiteSuperior);
+            Serial.println(F("%)"));
+            Serial.println(F("[VENT EXT] APAGADO - Manteniendo estabilidad"));
         }
     }
     
-    // Actualizar la potencia
     POTENCIA_VENTILADOR_EXTERNO = nuevaPotencia;
 }
 
@@ -245,6 +277,13 @@ void controlarVentilacion() {
 void diagnosticoVentilacion() {
     Serial.println(F("\n========== DIAGNÓSTICO VENTILACIÓN =========="));
     
+    // Calcular temperatura objetivo y bandas de trabajo
+    float tempObjetivo = esDia() ? TEMP_DIA : TEMP_NOCHE;
+    float tempLimiteInferior = tempObjetivo - HISTERESIS_TEMP;
+    float tempLimiteSuperior = tempObjetivo + HISTERESIS_TEMP;
+    float humedadLimiteInferior = HUMEDAD_OBJETIVO - HISTERESIS_HUMEDAD;
+    float humedadLimiteSuperior = HUMEDAD_OBJETIVO + HISTERESIS_HUMEDAD;
+    
     // Estado del Ventilador Externo
     Serial.println(F("\n--- VENTILADOR EXTERNO (Inyección/Extracción) ---"));
     Serial.print(F("Potencia actual: "));
@@ -254,30 +293,22 @@ void diagnosticoVentilacion() {
     Serial.println(F("%)"));
     
     Serial.print(F("Estado: "));
-    if (TEMP_PROMEDIO >= TEMP_PELIGRO_MAXIMA) {
+    if (esPeriodoDesecacion()) {
+        Serial.println(F("[DESEC] DESECACIÓN - Modo anti-hongos"));
+    } else if (TEMP_PROMEDIO >= TEMP_PELIGRO_MAXIMA) {
         Serial.println(F("[EMERG] EMERGENCIA - Temperatura alta"));
     } else if (HUMEDAD_PROMEDIO >= 95.0) {
         Serial.println(F("[ALERTA] ALERTA - Humedad crítica"));
     } else if (CALENTADOR_ACTIVO) {
         Serial.println(F("[CAL] APAGADO - Conservando calor"));
     } else if (HUMIDIFICADOR_ACTIVO) {
-        Serial.println(F("[HUM] MÍNIMO - Conservando humedad"));
-    } else if (RENOVACION_ACTIVA) {
-        Serial.println(F("[CICLO] RENOVACIÓN - Control PID activo"));
+        Serial.println(F("[HUM] APAGADO - Conservando humedad"));
+    } else if (TEMP_PROMEDIO < tempLimiteInferior || HUMEDAD_PROMEDIO < humedadLimiteInferior) {
+        Serial.println(F("[CONSERV] APAGADO - Condiciones bajas"));
+    } else if (TEMP_PROMEDIO > tempLimiteSuperior || HUMEDAD_PROMEDIO > humedadLimiteSuperior) {
+        Serial.println(F("[PID] ACTIVO - Regulando excesos"));
     } else {
-        Serial.println(F("[PAUSA] DESCANSO"));
-    }
-    
-    if (RENOVACION_ACTIVA) {
-        unsigned long tiempoRestante = TIEMPO_RENOVACION_AIRE - (millis() - ULTIMO_INICIO_RENOVACION);
-        Serial.print(F("Tiempo restante renovación: "));
-        Serial.print(tiempoRestante / 60000);
-        Serial.println(F(" min"));
-    } else {
-        unsigned long tiempoRestante = TIEMPO_DESCANSO_VENTILADOR - (millis() - ULTIMO_INICIO_RENOVACION);
-        Serial.print(F("Tiempo restante descanso: "));
-        Serial.print(tiempoRestante / 60000);
-        Serial.println(F(" min"));
+        Serial.println(F("[ESTABLE] APAGADO - Condiciones óptimas"));
     }
     
     // Estado del Ventilador Interno
@@ -291,18 +322,20 @@ void diagnosticoVentilacion() {
     Serial.print(F("Estado: "));
     if (CALENTADOR_ACTIVO) {
         Serial.println(F("[CAL] MÁXIMO - Distribuyendo calor"));
+    } else if (esPeriodoDesecacion()) {
+        Serial.println(F("[DESEC] MÁXIMO - Periodo de desecación"));
     } else if (MEZCLA_ACTIVA) {
         Serial.println(F("[MEZCLA] MÁXIMO - Ciclo de mezcla"));
         unsigned long tiempoRestante = TIEMPO_MEZCLA_AIRE - (millis() - ULTIMO_INICIO_MEZCLA);
         Serial.print(F("Tiempo restante: "));
-        Serial.print(tiempoRestante / 60000);
-        Serial.println(F(" min"));
+        Serial.print(tiempoRestante / 1000);
+        Serial.println(F(" seg"));
     } else {
         Serial.println(F("[PAUSA] DESCANSO"));
         unsigned long tiempoRestante = TIEMPO_DESCANSO_MEZCLA - (millis() - ULTIMO_INICIO_MEZCLA);
         Serial.print(F("Tiempo restante: "));
-        Serial.print(tiempoRestante / 60000);
-        Serial.println(F(" min"));
+        Serial.print(tiempoRestante / 1000);
+        Serial.println(F(" seg"));
     }
     
     // Estado del PID
@@ -327,18 +360,38 @@ void diagnosticoVentilacion() {
         Serial.println(Kd);
     }
     
-    // Condiciones ambientales
+    // Condiciones ambientales y bandas de trabajo
     Serial.println(F("\n--- CONDICIONES AMBIENTALES ---"));
     Serial.print(F("Temperatura: "));
     Serial.print(TEMP_PROMEDIO);
-    Serial.print(F("°C (Peligro: ≥"));
-    Serial.print(TEMP_PELIGRO_MAXIMA);
+    Serial.print(F("°C | Objetivo: "));
+    Serial.print(tempObjetivo);
+    Serial.print(F("°C ("));
+    Serial.print(tempLimiteInferior);
+    Serial.print(F("-"));
+    Serial.print(tempLimiteSuperior);
     Serial.println(F("°C)"));
+    
     Serial.print(F("Humedad: "));
     Serial.print(HUMEDAD_PROMEDIO);
-    Serial.print(F("% (Crítico: ≥95%, Objetivo: "));
+    Serial.print(F("% | Objetivo: "));
     Serial.print(HUMEDAD_OBJETIVO);
+    Serial.print(F("% ("));
+    Serial.print(humedadLimiteInferior);
+    Serial.print(F("-"));
+    Serial.print(humedadLimiteSuperior);
     Serial.println(F("%)"));
+    
+    // Indicadores de estado
+    Serial.println(F("\n--- INDICADORES DE ESTADO ---"));
+    Serial.print(F("Temperatura ALTA: "));
+    Serial.println((TEMP_PROMEDIO > tempLimiteSuperior) ? "SI" : "NO");
+    Serial.print(F("Temperatura BAJA: "));
+    Serial.println((TEMP_PROMEDIO < tempLimiteInferior) ? "SI" : "NO");
+    Serial.print(F("Humedad ALTA: "));
+    Serial.println((HUMEDAD_PROMEDIO > humedadLimiteSuperior) ? "SI" : "NO");
+    Serial.print(F("Humedad BAJA: "));
+    Serial.println((HUMEDAD_PROMEDIO < humedadLimiteInferior) ? "SI" : "NO");
     
     Serial.println(F("============================================\n"));
 }

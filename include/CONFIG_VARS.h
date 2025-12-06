@@ -110,14 +110,14 @@ int POTENCIA_VENTILADOR_INTERNO = 0;                        // Potencia del vent
 // ==================== VENTILADOR EXTERNO ====================
 // Potencias definidas para diferentes modos de operación
 int VE_APAGADO = 0;                      // Ventilador completamente apagado
-int VE_MINIMO = 30;                      // Potencia mínima cuando humidificador activo (40-50 PWM)
+int VE_MINIMO = 20;                      // Potencia mínima cuando humidificador activo (40-50 PWM)
 int VE_MEDIO = 128;                      // Potencia media para renovación de aire normal
 int VE_ALTO = 200;                       // Potencia alta para humedad elevada (80% = ~204 PWM)
 int VE_MAXIMO = 255;                     // Potencia máxima para emergencia de temperatura
 
 // Tiempos del ciclo de renovación normal de aire (en milisegundos)
-unsigned long TIEMPO_RENOVACION_AIRE = 10 * 60000;      // 10 minutos de ventilación
-unsigned long TIEMPO_DESCANSO_VENTILADOR = 10 * 60000;  // 10 minutos de descanso (completa 20 min total)
+unsigned long TIEMPO_RENOVACION_AIRE = 5 * 60000;       // 5 minutos de ventilación (reducido para conservar humedad)
+unsigned long TIEMPO_DESCANSO_VENTILADOR = 25 * 60000;  // 25 minutos de descanso (completa 30 min total)
 
 // Variables de control de ciclo de renovación
 unsigned long ULTIMO_INICIO_RENOVACION = 0;    // Marca de tiempo del último inicio de renovación
