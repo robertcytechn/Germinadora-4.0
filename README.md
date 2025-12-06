@@ -72,10 +72,10 @@ Sistema de control automatizado basado en **Arduino Mega 2560** diseñado para m
 | Ventilador externo | PWM | 7 | 12V | NPN alta potencia | Extracción/inyección de aire |
 | Ventilador interno | PWM | 8 | 5V | NPN 2N2222 | Mezcla de aire |
 | Luces blancas LED | PWM | 6 | 12V | NPN alta potencia | Iluminación principal |
-| Luces rojas LED | Digital | 24 | Espectro de floración |
-| Resistencia calefactora | Relay | 22 | Calefacción |
-| Humidificador ultrasónico | Relay | 23 | Humidificación |
-| Buzzer | PWM | 11 | Alarmas sonoras |
+| Luces rojas LED | Digital | 24 | Espectro de floración | relay | 5V | Control espectro rojo |
+| Resistencia calefactora | Relay | 22 | Calefacción | relay | 5V | Control térmico |
+| Humidificador ultrasónico | Relay | 23 | Humidificación | relay | 5V | Control humedad |
+| Buzzer | PWM | 11 | Alarmas sonoras | Digital | 5V | Notificaciones |
 
 ### Interfaz Usuario
 - 4 Botones táctiles (UP, DOWN, ENTER, BACK) - Pines 40-43
