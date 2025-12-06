@@ -53,23 +53,23 @@ void mostrarPantalla() {
     display.setTextSize(1);
     display.setCursor(0, 12);
     display.print("T:");
-    display.print(TEMP_PROMEDIO, 1);
-    display.print("C");
+    display.print(TEMPERATURAS_SENSOR[0], 1);
+    display.print(" - ");
+    display.print(TEMPERATURAS_SENSOR[1], 1);
+    display.print(" - ");
+    display.print(TEMPERATURAS_SENSOR[2], 1);
     
     display.setCursor(65, 12);
-    display.print("H:");
-    display.print(HUMEDAD_PROMEDIO, 0);
-    display.print("%");
+    
     
     // ===== LÍNEA 5-6: TEMPERATURA Y HUMEDAD MÁXIMA =====
     display.setCursor(0, 21);
-    display.print("Max:");
-    display.print(TEMP_MAXIMA, 1);
-    display.print("C");
-    
-    display.setCursor(65, 21);
-    display.print(HUMEDAD_MAXIMA, 0);
-    display.print("%");
+    display.print("H:");
+    display.print(HUMEDADES_SENSOR[0], 0);
+    display.print(" - ");
+    display.print(HUMEDADES_SENSOR[1], 0);
+    display.print(" - ");
+    display.print(HUMEDADES_SENSOR[2], 0);
     
     // ===== LÍNEA 7: SEPARADOR =====
     display.drawLine(0, 30, 128, 30, SSD1306_WHITE);
@@ -77,20 +77,20 @@ void mostrarPantalla() {
     // ===== LÍNEA 8-9: ESTADO DE SENSORES =====
     display.setTextSize(1);
     display.setCursor(0, 33);
-    display.print("S1:");
-    display.print(TEMPERATURAS_SENSOR[0], 0);
+    display.print("Max:");
+    display.print(TEMP_MAXIMA, 0);
     display.print("C ");
-    display.print(HUMEDADES_SENSOR[0], 0);
-    display.print("% TDia:");
+    display.print(HUMEDAD_MAXIMA, 0);
+    display.print("% TD:");
     display.print(TEMP_DIA, 1);
     display.print("C");
     
     display.setCursor(0, 42);
-    display.print("S2:");
-    display.print(TEMPERATURAS_SENSOR[1], 0);
+    display.print("PRO:");
+    display.print(TEMP_PROMEDIO, 0);
     display.print("C ");
-    display.print(HUMEDADES_SENSOR[1], 0);
-    display.print("% TNoc:");
+    display.print(HUMEDAD_PROMEDIO, 0);
+    display.print("% TN:");
     display.print(TEMP_NOCHE, 1);
     display.print("C");
     

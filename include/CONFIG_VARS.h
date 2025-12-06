@@ -16,6 +16,14 @@ DHT dhtPuerta(DHT_PUERTA_P, DHT11);                                         // O
 // ====================== MODO ANTI HONGOS ==========================
 bool MODO_ANTI_HONGOS = false;              // Modo anti hongos desactivado por defecto / solo activamos para desecar camara y esterilizar
 
+// ====================== PERIODOS DE DESECACIÓN ==========================
+// Periodos automáticos de desecación para prevención de hongos
+int HORA_DESECACION_1 = 12 * 60;            // Primera desecación: 12:00 PM (mediodía)
+int HORA_DESECACION_2 = 17 * 60;            // Segunda desecación: 5:00 PM (tarde)
+int DURACION_DESECACION = 60;               // Duración de cada periodo de desecación en minutos
+bool PERIODO_DESECACION_ACTIVO = false;     // Flag para saber si estamos en periodo de desecación
+unsigned long INICIO_PERIODO_DESECACION = 0; // Marca de tiempo del inicio del periodo de desecación
+
 // Configuracion de iluminacion en minutos
 int INICIO_DIA = 7 * 60;                // Hora de inicio del dia (7 AM)
 int FIN_DIA = 21 * 60;                  // Hora de fin del dia (9 PM)
@@ -33,6 +41,23 @@ bool esDia(){                                               // Funcion para dete
     } else {
         return false; // Es de noche
     }
+}
+
+// Funcion para verificar si estamos en un periodo de desecacion
+bool esPeriodoDesecacion() {
+    minutosActuales = RELOJ_GLOBAL.hour() * 60 + RELOJ_GLOBAL.minute();
+    
+    // Verificar si estamos en el primer periodo de desecación (12:00 PM - 1:00 PM)
+    if (minutosActuales >= HORA_DESECACION_1 && minutosActuales < (HORA_DESECACION_1 + DURACION_DESECACION)) {
+        return true;
+    }
+    
+    // Verificar si estamos en el segundo periodo de desecación (5:00 PM - 6:00 PM)
+    if (minutosActuales >= HORA_DESECACION_2 && minutosActuales < (HORA_DESECACION_2 + DURACION_DESECACION)) {
+        return true;
+    }
+    
+    return false;
 }
 
 // relays con logica inversa
@@ -85,7 +110,7 @@ int POTENCIA_VENTILADOR_INTERNO = 0;                        // Potencia del vent
 // ==================== VENTILADOR EXTERNO ====================
 // Potencias definidas para diferentes modos de operación
 int VE_APAGADO = 0;                      // Ventilador completamente apagado
-int VE_MINIMO = 45;                      // Potencia mínima cuando humidificador activo (40-50 PWM)
+int VE_MINIMO = 30;                      // Potencia mínima cuando humidificador activo (40-50 PWM)
 int VE_MEDIO = 128;                      // Potencia media para renovación de aire normal
 int VE_ALTO = 200;                       // Potencia alta para humedad elevada (80% = ~204 PWM)
 int VE_MAXIMO = 255;                     // Potencia máxima para emergencia de temperatura
@@ -121,7 +146,7 @@ double PID_Setpoint = 70.0;                    // Punto de ajuste del PID (humed
 // Kp: Ganancia proporcional - Respuesta inmediata al error
 // Ki: Ganancia integral - Corrige errores acumulados en el tiempo
 // Kd: Ganancia derivativa - Anticipa cambios futuros
-double Kp = 2.0;                               // Ganancia proporcional
+double Kp = 30.0;                               // Ganancia proporcional
 double Ki = 0.5;                               // Ganancia integral
 double Kd = 0.1;                               // Ganancia derivativa
 

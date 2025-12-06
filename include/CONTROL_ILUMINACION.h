@@ -8,7 +8,7 @@
 // Constantes para mayor claridad
 const uint8_t POTENCIA_MAXIMA = 255;
 const uint8_t POTENCIA_MINIMA = 0;
-
+unsigned long ultimaActualizacionIluminacion = 0;
 /**
  *  @brief Apaga todas las luces del sistema
  */
@@ -58,6 +58,12 @@ void controlIluminacion() {
         LUZ_ROJA_ACTIVA = true;
         return;
     }
+
+    // colocamos una funcion para evitar actualizaciones muy frecuentes
+    if (millis() - ultimaActualizacionIluminacion < 1 * 60000) { // no dejara que se actualice mas de una vez por minuto
+        return;
+    }
+    ultimaActualizacionIluminacion = millis();
 
     // Período nocturno: apagar todas las luces
     if (!esDia()) {

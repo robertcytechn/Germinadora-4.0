@@ -21,25 +21,6 @@ inline bool lecturaValida(float valor) {
     return !isnan(valor);
 }
 
-/**
- *  @brief Lee un sensor DHT y almacena temperatura y humedad
- *  @param sensor Objeto DHT a leer
- *  @param indice Índice en los arrays (0=superior, 1=inferior, 2=puerta)
- *  @return true si la lectura fue exitosa
- */
-bool leerSensorDHT(DHT &sensor, uint8_t indice) {
-    float temp = sensor.readTemperature();
-    float hum = sensor.readHumidity();
-    
-    // Validar lecturas
-    if (lecturaValida(temp) && lecturaValida(hum)) {
-        TEMPERATURAS_SENSOR[indice] = temp;
-        HUMEDADES_SENSOR[indice] = hum;
-        return true;
-    }
-    
-    return false;
-}
 
 /**
  *  @brief Calcula valores máximos y promedios de temperatura y humedad
@@ -58,6 +39,14 @@ void calcularEstadisticas() {
  *  @brief Actualiza la hora actual desde el RTC
  */
 void actualizarReloj() {
+    // primero revisemos que el reloj mande una fecha y hora valida
+    if(reloj.now().isValid()){
+        RELOJ_GLOBAL = reloj.now();
+    } else {
+        Serial.println(F("ERROR: Reloj RTC no responde o fecha/hora inválida!"));
+    }
+
+
     RELOJ_GLOBAL = reloj.now();
     minutosActuales = RELOJ_GLOBAL.hour() * 60 + RELOJ_GLOBAL.minute();
 }
@@ -86,15 +75,12 @@ void leerSensores() {
     ultimaLecturaSensores = tiempoActual;
     
     // Leer los 3 sensores DHT11
-    bool sensor0OK = leerSensorDHT(dhtSuperior, 0);
-    bool sensor1OK = leerSensorDHT(dhtInferior, 1);
-    bool sensor2OK = leerSensorDHT(dhtPuerta, 2);
-    
-    // Opcional: Manejar errores de lectura
-    if (!sensor0OK || !sensor1OK || !sensor2OK) {
-        // Aquí podrías activar una alerta o usar valores anteriores
-        // Por ahora continúa con los valores que sí leyó
-    }
+    TEMPERATURAS_SENSOR[0] = dhtSuperior.readTemperature(); // Superior
+    HUMEDADES_SENSOR[0] = dhtSuperior.readHumidity();
+    TEMPERATURAS_SENSOR[1] = dhtInferior.readTemperature(); // Inferior
+    HUMEDADES_SENSOR[1] = dhtInferior.readHumidity();
+    TEMPERATURAS_SENSOR[2] = dhtPuerta.readTemperature(); // Puerta
+    HUMEDADES_SENSOR[2] = dhtPuerta.readHumidity();
     
     // Actualizar reloj RTC
     actualizarReloj();

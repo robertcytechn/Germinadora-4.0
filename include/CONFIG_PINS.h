@@ -124,7 +124,7 @@
 // 4. ZONA DE SENSORES (Digital Block B - Pines 30-39)
 // Los DHT van aquí u otros sensores digitales
 // -----------------------------------------------------------------
-#define DHT_SUPERIOR_P D_B30
+#define DHT_SUPERIOR_P D_B33
 #define DHT_INFERIOR_P D_B31
 #define DHT_PUERTA_P D_B32
 

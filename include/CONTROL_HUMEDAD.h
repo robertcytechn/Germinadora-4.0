@@ -207,6 +207,40 @@ void controlarHumedad() {
     // Primero ejecutar los watchdogs de seguridad
     verificarFuncionamientoHumidificador();
     
+    // ===============================================================
+    // PRIORIDAD MÁXIMA: PERIODO DE DESECACIÓN ANTI-HONGOS
+    // ===============================================================
+    if (esPeriodoDesecacion()) {
+        if (!PERIODO_DESECACION_ACTIVO) {
+            // Acabamos de entrar en periodo de desecación
+            PERIODO_DESECACION_ACTIVO = true;
+            INICIO_PERIODO_DESECACION = millis();
+            Serial.println(F("========================================"));
+            Serial.println(F("INICIANDO PERIODO DE DESECACIÓN"));
+            Serial.println(F("Objetivo: Prevención de hongos"));
+            Serial.print(F("Duración: "));
+            Serial.print(DURACION_DESECACION);
+            Serial.println(F(" minutos"));
+            Serial.println(F("========================================"));
+        }
+        
+        // Durante periodo de desecación: apagar humidificador si está encendido
+        if (HUMIDIFICADOR_ACTIVO) {
+            Serial.println(F("[DESECACIÓN] Apagando humidificador"));
+            apagarHumidificador();
+        }
+        return;  // No continuar con el control normal
+    } else {
+        if (PERIODO_DESECACION_ACTIVO) {
+            // Acabamos de salir del periodo de desecación
+            PERIODO_DESECACION_ACTIVO = false;
+            Serial.println(F("========================================"));
+            Serial.println(F("FINALIZANDO PERIODO DE DESECACIÓN"));
+            Serial.println(F("Retomando control normal de humedad"));
+            Serial.println(F("========================================"));
+        }
+    }
+    
     // Verificar estados de peligro por humedad
     if (HUMEDAD_PROMEDIO >= HUMEDAD_PELIGRO_MAXIMA) {
         if (!SISTEMA_PELIGRO_MAXIMO) {

@@ -62,6 +62,23 @@ void controlarVentiladorExterno() {
     int nuevaPotencia = POTENCIA_VENTILADOR_EXTERNO;  // Mantener potencia actual por defecto
     
     // ===============================================================
+    // PRIORIDAD MÁXIMA: PERIODO DE DESECACIÓN ANTI-HONGOS
+    // ===============================================================
+    if (esPeriodoDesecacion()) {
+        nuevaPotencia = VE_ALTO;  // Ventilación alta durante desecación
+        PID_ACTIVO = false;  // Desactivar PID
+        
+        if (POTENCIA_VENTILADOR_EXTERNO != VE_ALTO || !PERIODO_DESECACION_ACTIVO) {
+            Serial.println(F("[DESECACIÓN] Ventilador Externo: ALTO"));
+            Serial.print(F("Potencia: "));
+            Serial.print(VE_ALTO);
+            Serial.println(F(" PWM - Reduciendo humedad"));
+        }
+        POTENCIA_VENTILADOR_EXTERNO = nuevaPotencia;
+        return;  // Salir, prioridad máxima
+    }
+    
+    // ===============================================================
     // PRIORIDAD 1: EMERGENCIA - TEMPERATURA ALTA (Máxima prioridad)
     // ===============================================================
     if (TEMP_PROMEDIO >= TEMP_PELIGRO_MAXIMA) {
@@ -130,7 +147,22 @@ void controlarVentiladorExterno() {
     }
     
     // ===============================================================
-    // MODO NORMAL: CONTROL PID + CICLO DE RENOVACIÓN
+    // PRIORIDAD BAJA: MODO NOCTURNO - Ventilador apagado de noche
+    // ===============================================================
+    if (!esDia()) {
+        nuevaPotencia = VE_APAGADO;
+        PID_ACTIVO = false;
+        
+        if (POTENCIA_VENTILADOR_EXTERNO != VE_APAGADO) {
+            Serial.println(F("[NOCHE] Ventilador Externo: APAGADO"));
+            Serial.println(F("Modo nocturno - Conservando condiciones"));
+        }
+        POTENCIA_VENTILADOR_EXTERNO = nuevaPotencia;
+        return;  // No continuar con el control normal
+    }
+    
+    // ===============================================================
+    // MODO NORMAL: CONTROL PID + CICLO DE RENOVACIÓN (SOLO DE DÍA)
     // ===============================================================
     
     // Actualizar setpoint del PID con la humedad objetivo actual
@@ -144,7 +176,7 @@ void controlarVentiladorExterno() {
             RENOVACION_ACTIVA = false;
             ULTIMO_INICIO_RENOVACION = tiempoActual;
             Serial.println(F("[VENT] Ventilador Externo: Finalizando renovación de aire"));
-            Serial.println(F("[PAUSA]  Iniciando periodo de descanso (50 min)"));
+            Serial.println(F("[PAUSA]  Iniciando periodo de descanso (50 min) con ventilación mínima"));
         }
         
         // Durante la renovación, usar control PID
@@ -180,12 +212,15 @@ void controlarVentiladorExterno() {
             Serial.println(F("[TIEMPO]  Duración: 10 minutos con control PID"));
         }
         
-        // Durante el descanso, ventilador apagado
-        nuevaPotencia = VE_APAGADO;
+        // Durante el descanso, ventilación MÍNIMA (cambiado de APAGADO a MÍNIMO)
+        nuevaPotencia = VE_MINIMO;
         PID_ACTIVO = false;
         
-        if (POTENCIA_VENTILADOR_EXTERNO != VE_APAGADO) {
-            Serial.println(F("[VENT] Ventilador Externo: APAGADO (Periodo de descanso)"));
+        if (POTENCIA_VENTILADOR_EXTERNO != VE_MINIMO) {
+            Serial.println(F("[VENT] Ventilador Externo: MÍNIMO (Periodo de descanso)"));
+            Serial.print(F("Potencia: "));
+            Serial.print(VE_MINIMO);
+            Serial.println(F(" PWM - Circulación constante"));
         }
     }
     
